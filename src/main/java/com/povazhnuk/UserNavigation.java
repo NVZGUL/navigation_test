@@ -4,7 +4,7 @@ public class UserNavigation {
     private long ID;
     private String user;
     private String URL;
-    private int numberOfSeconds;
+    private double numberOfSeconds;
 
     public long getID() {
         return ID;
@@ -18,7 +18,7 @@ public class UserNavigation {
         return URL;
     }
 
-    public int getNumberOfSeconds() {
+    public double getNumberOfSeconds() {
         return numberOfSeconds;
     }
 
@@ -27,13 +27,28 @@ public class UserNavigation {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        UserNavigation that = (UserNavigation) o;
+
+        return (user != null ? !user.equals(that.user) : that.user != null) &&
+                (URL != null ? URL.equals(that.URL) : that.URL == null);
+    }
+
+    @Override
+    public int hashCode() {
+        int result;
+        result = user != null ? user.hashCode() : 0;
+        result = 31 * result + (user != null ? user.hashCode() : 0);
+        result = 31 * result + (URL != null ? URL.hashCode() : 0);
+        return result;
+    }
+
+    @Override
     public String toString() {
-        return "UserNavigation{" +
-                "ID=" + ID +
-                ", user='" + user + '\'' +
-                ", URL='" + URL + '\'' +
-                ", numberOfSeconds=" + numberOfSeconds +
-                '}';
+        return user + ',' + URL + ','+ numberOfSeconds;
     }
 
     public class Builder {
@@ -55,7 +70,7 @@ public class UserNavigation {
             return this;
         }
 
-        public Builder setNumberOfSeconds(int numberOfSeconds) {
+        public Builder setNumberOfSeconds(double numberOfSeconds) {
             UserNavigation.this.numberOfSeconds = numberOfSeconds;
             return this;
         }
