@@ -1,11 +1,15 @@
 package com.povazhnuk;
 
 import java.io.*;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class MonitorLog {
+public class MonitorLog implements Runnable{
 
     private final String COMMA = ",";
 
@@ -35,21 +39,38 @@ public class MonitorLog {
     }
 
     public void writeToFile(Set<UserNavigation> lst) throws IOException {
-        File file = new File("avg_" + this.file.getName());
+        File file = new File("files/avg_" + this.file.getName());
         BufferedWriter bw = new BufferedWriter(new FileWriter(file));
-        String str = "";
+        LocalDateTime now = LocalDateTime.now();
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+        StringBuilder str = new StringBuilder();
+        str.append(dtf.format(now));
+        str.append("\n\n");
         for (UserNavigation i: lst) {
-            str += i.toString() + '\n';
+            str.append(i.toString());
+            str.append('\n');
         }
-        bw.write(str);
+        bw.write(str.toString());
         bw.close();
     }
 
-    public void run() throws IOException {
+    @Override
+    public void run(){
+        try {
+            parseFile();
+        }
+        catch (IOException ioe) {
+            ioe.printStackTrace();
+        }
+
+    }
+
+    public void parseFile() throws IOException {
         List<UserNavigation> lst = this.readFromFile();
         lst.sort(Comparator.comparing(UserNavigation::getNumberOfSeconds).reversed());
         Map<UserNavigation, List<Double>> usrUrlBuffer = new HashMap<>();
 
+        // Better solution then double loop
         for (UserNavigation i : lst) {
             List<Double> tmp = new ArrayList<>();
             if (usrUrlBuffer.containsKey(i)) {
@@ -68,9 +89,9 @@ public class MonitorLog {
                 usrUrlBuffer.put(i, tmp);
             }
         }
-        for (UserNavigation i : usrUrlBuffer.keySet()) {
-            System.out.println(i);
-        }
+
+        //usrUrlBuffer.keySet().forEach(System.out::println);
+
         this.writeToFile(usrUrlBuffer.keySet());
     }
 
@@ -79,7 +100,10 @@ public class MonitorLog {
     }
 
     public static void main(String[] args) throws IOException{
-        MonitorLog mL = new MonitorLog("test.csv");
-        mL.run();
+        ExecutorService service = Executors.newFixedThreadPool(10);
+        for (String fileName : args) {
+            service.submit(new MonitorLog(fileName));
+        }
+        service.shutdown();
     }
 }

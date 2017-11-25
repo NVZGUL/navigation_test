@@ -1,5 +1,8 @@
 package com.povazhnuk;
 
+/**
+ * Class to handle object from csv file
+ */
 public class UserNavigation {
     private long ID;
     private String user;
